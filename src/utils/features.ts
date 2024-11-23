@@ -229,3 +229,21 @@ export const sendNotificationEmail = async (email: string, productName: string) 
     console.error(`Failed to send notification email to ${email}:`, error);
   }
 };
+
+
+export const sendQueryRejectionEmail = async (email: string, queryId: string,productName:string) => {
+   
+try {
+ 
+  await resend.emails.send({
+    from: "ShopSphere <no-reply@shopsphere.com>",
+    to: email,
+    subject: "Query Rejected",
+    html: `<p>Your query regarding the product <b>${productName}</b> has been rejected.Sorry we are not forwarding your product to our shop</p>`,
+  });
+} catch (error) {
+  console.error(`Failed to send notification email to ${email}:`, error);
+}
+
+
+}
