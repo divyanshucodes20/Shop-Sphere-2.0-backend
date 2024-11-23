@@ -136,7 +136,6 @@ export const newQuery=TryCatch(
           res.status(201).json({
             success: true,
             message: "Query posted successfully",
-            newQuery,
           });
     }
 )
@@ -160,3 +159,85 @@ export const deleteQuery=TryCatch(
         })
     }
 )
+
+export const deleteUserQuery=TryCatch(
+    async(req,res,next)=>{
+        const {id}=req.params;
+        const {userId}=req.query;
+        if(!userId){
+            return next(new ErrorHandler("Login first to delete a query",401));
+        }
+        if(!id){
+            return next(new ErrorHandler("No query found",404));
+        }
+        const query=await ProductQuery.findById(id);
+        if(!query){
+            return next(new ErrorHandler("No query found",404));
+        }
+        if(query.userId!==userId){
+            return next(new ErrorHandler("Unauthorized to delete this query",401));
+        }
+        if(query.queryStatus!=="pending"){
+            return next(new ErrorHandler("Cannot delete queries that are approved",400));
+        }
+        await query.deleteOne();
+        res.status(200).json({
+            success:true,
+            message:"Query deleted successfully"
+        })
+    }
+)
+
+export const updateUserQuery=TryCatch(
+    async(req,res,next)=>{
+    const {id}=req.params;
+    const {userId}=req.query;
+    if(!userId){
+        return next(new ErrorHandler("Login first to update a query",401));
+    }   
+    if(!id){
+        return next(new ErrorHandler("No query found",404));
+    }
+    const query=await ProductQuery.findById(id);
+    if(!query){
+        return next(new ErrorHandler("No query found",404));
+    };
+    if(query.userId!==userId){
+        return next(new ErrorHandler("Unauthorized to update this query",401)); 
+    }
+    if(query.queryStatus!=="pending"){
+        return next(new ErrorHandler("Cannot update queries that are approved",400));   
+    }
+    const {
+        productDetails: { name, category, description, price, stock, photos },
+        pickupDetails: { pickupAddress, pickupCity, pickupPostalCode },
+      } = req.body;
+  
+      if (!name || !category || !description || !price || !stock || !photos || photos.length === 0) {
+        return next(new ErrorHandler("All product details are required", 400));
+      }
+  
+      if (!pickupAddress || !pickupCity|| !pickupPostalCode) {
+        return next(new ErrorHandler("Pickup address and city are required", 400));
+      }
+      query.productDetails={
+        name,
+        category,
+        description,
+        price,
+        stock,
+        photos,
+      };
+      query.pickupDetails={
+        pickupAddress,
+        pickupCity,
+        pickupPostalCode
+      };
+      await query.save();
+      res.status(200).json({
+        success:true,
+        message:"Query updated successfully"
+    })
+}
+)
+

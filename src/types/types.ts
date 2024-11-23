@@ -108,3 +108,11 @@ export interface NewQueryRequestBody {
   };
 }
 
+export interface NewUserPaymentRequestBody{
+userId:string;
+reUsableProductId:string;
+amount:number;
+commission:number;
+paymentStatus:"pending"|"completed";
+}
+
