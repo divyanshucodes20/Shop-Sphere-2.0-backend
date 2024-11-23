@@ -241,7 +241,7 @@ export const updateReUsableProduct = TryCatch(async (req, res, next) => {
   });
 });
 
-export const deleteProduct = TryCatch(async (req, res, next) => {
+export const deleteReUsableProduct = TryCatch(async (req, res, next) => {
   const product = await ReUsableProduct.findById(req.params.id);
   if (!product) return next(new ErrorHandler("Product Not Found", 404));
 
@@ -257,9 +257,8 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
       queries.deleteMany()
     ]);  
   await invalidateCache({
-    product: true,
-    productId: String(product._id),
-    admin: true,
+    reUsableProduct: true,
+    reUsableProductId: String(product._id),
   });
 
   return res.status(200).json({
@@ -267,3 +266,5 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
     message: "Product Deleted Successfully",
   });
 });
+
+

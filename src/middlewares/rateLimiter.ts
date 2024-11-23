@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { redis } from "../app.js"; 
-const RATE_LIMIT_TTL = 30; 
-const RATE_LIMIT_MAX_REQUESTS = 8;
+const RATE_LIMIT_TTL = 10; 
+const RATE_LIMIT_MAX_REQUESTS = 20;
 
 const rateLimiter = async (req: Request, res: Response, next: NextFunction) => {
   try {

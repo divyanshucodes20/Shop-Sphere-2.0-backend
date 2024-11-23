@@ -5,6 +5,9 @@ import { redis, resend } from "../app.js";
 import { Product } from "../models/product.js";
 import { Review } from "../models/review.js";
 import { InvalidateCacheProps, OrderItemType } from "../types/types.js";
+import { ReUsableProduct } from "../models/reUsable.js";
+import { ProductQuery } from "../models/query.js";
+import { UserPayment } from "../models/userPayment.js";
 
 
 
@@ -246,4 +249,32 @@ try {
 }
 
 
+}
+export const checkStockOfReUsableProductAndDelete = async (productId: string,quantity:number) => {
+
+const product=await ReUsableProduct.findById(productId);
+
+if(!product) return;
+
+if(product.productDetails?.stock===quantity){
+  const ids = product.productDetails?.photos.map((photo) => photo.public_id);
+
+  if (ids) {
+    await deleteFromCloudinary(ids);
+  }
+
+  const queries=ProductQuery.find({productId:product._id});
+   await Promise.all([
+      product.deleteOne(),
+      queries.deleteMany()
+    ]);  
+  await invalidateCache({
+    reUsableProduct: true,
+    reUsableProductId: String(product._id),
+  });
+}
+else{
+  product.productDetails!.stock-=quantity;
+  await product.save();
+}
 }

@@ -16,6 +16,7 @@ import dashboardRoute from "./routes/stats.js";
 import notificationRoute from "./routes/notification.js";
 import queryRoute from "./routes/query.js";
 import userPaymentRoute from "./routes/userPayment.js";
+import ReUsableProductRoute from "./routes/reUsable.js";
 import rateLimiter from "./middlewares/rateLimiter.js";
 
 config({
@@ -69,6 +70,7 @@ app.use("/api/v1/dashboard", dashboardRoute);
 app.use("/api/v1/notification",notificationRoute);
 app.use("/api/v1/query",queryRoute);
 app.use("/api/v1/userPayment", userPaymentRoute);
+app.use("/api/v1/reusable-product", ReUsableProductRoute);
 
 app.use("/uploads", express.static("uploads"));
 app.use(errorMiddleware);

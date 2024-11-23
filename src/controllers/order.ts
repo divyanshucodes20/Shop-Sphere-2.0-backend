@@ -3,8 +3,10 @@ import { redis, redisTTL } from "../app.js";
 import { TryCatch } from "../middlewares/error.js";
 import { Order } from "../models/order.js";
 import { NewOrderRequestBody } from "../types/types.js";
-import { invalidateCache, reduceStock } from "../utils/features.js";
+import { checkStockOfReUsableProductAndDelete, invalidateCache, reduceStock } from "../utils/features.js";
 import ErrorHandler from "../utils/utility-class.js";
+import { ReUsableProduct } from "../models/reUsable.js";
+import { UserPayment } from "../models/userPayment.js";
 
 export const myOrders = TryCatch(async (req, res, next) => {
   const { id: user } = req.query;
@@ -81,6 +83,40 @@ export const newOrder = TryCatch(
     if (!shippingInfo || !orderItems || !user || !subtotal || !tax || !total)
       return next(new ErrorHandler("Please Enter All Fields", 400));
 
+    if (orderItems.length === 0)
+      return next(new ErrorHandler("Please Add Items to Order", 400));
+
+    const reusableData = await Promise.all(
+      orderItems.map(async (item) => {
+        const reusableProduct = await ReUsableProduct.findById(item.productId);
+        if (reusableProduct) {
+          await checkStockOfReUsableProductAndDelete(item.productId, item.quantity);
+
+          // Calculate amount and commission
+          const itemPrice = reusableProduct.productDetails?.price ?? 0;
+          const totalAmount = itemPrice * item.quantity;
+          const totalCommission = reusableProduct.commission * item.quantity;
+
+          // Create payment entry for reusable items
+          await UserPayment.create({
+            userId: user,
+            reusableProductId: item.productId,
+            amount: totalAmount - totalCommission, // Pending payment to user
+          });
+
+          return {
+            item,
+            commission: reusableProduct.commission,
+            totalAmount,
+          };
+        }
+        return null;
+      })
+    );
+
+    const filteredReUsables = reusableData.filter(Boolean);
+
+    // Create the order
     const order = await Order.create({
       shippingInfo,
       orderItems,
@@ -92,8 +128,16 @@ export const newOrder = TryCatch(
       total,
     });
 
-    await reduceStock(orderItems);
+    // Reduce stock for non-reusable products
+    const nonReusableItems = orderItems.filter(
+      (item) => !filteredReUsables.find((reusable) => reusable?.item.productId === item.productId)
+    );
 
+    if (nonReusableItems.length > 0) {
+      await reduceStock(nonReusableItems);
+    }
+
+    // Invalidate cache for relevant entities
     await invalidateCache({
       product: true,
       order: true,
@@ -108,6 +152,7 @@ export const newOrder = TryCatch(
     });
   }
 );
+
 
 export const processOrder = TryCatch(async (req, res, next) => {
   const { id } = req.params;
