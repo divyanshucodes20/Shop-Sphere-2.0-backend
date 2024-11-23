@@ -79,13 +79,16 @@ export interface NewOrderRequestBody {
   orderItems: OrderItemType[];
 }
 export interface NewReUsableProductRequestBody {
-  name: string;
-  category: string;
-  price: number;
-  stock: number;
-  description: string;
   userId: string;
-  userName: string;
+  userEmail: string;
+  productDetails: {
+    name: string;
+    category: string;
+    description: string;
+    price: number;
+    stock: number;
+  };
+  commission?: number;
 }
 export interface NewQueryRequestBody {
   userId: string;
@@ -106,13 +109,5 @@ export interface NewQueryRequestBody {
     pickupCity: string;
     pickupPostalCode: string;
   };
-}
-
-export interface NewUserPaymentRequestBody{
-userId:string;
-reUsableProductId:string;
-amount:number;
-commission:number;
-paymentStatus:"pending"|"completed";
 }
 

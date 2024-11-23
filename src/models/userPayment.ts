@@ -16,10 +16,6 @@ const schema = new mongoose.Schema(
       type: Number,
       required: [true, "Amount is required"],
     },
-    commission: {
-      type: Number,
-      required: [true, "Commission is required"],
-    },
     paymentStatus: {
       type: String,
       enum: ["pending", "completed"],
@@ -30,9 +26,6 @@ const schema = new mongoose.Schema(
     timestamps: true,
   }
 );
-schema.virtual("totalAmount").get(function () {
-  return this.amount + this.commission;
-});
 
 
 

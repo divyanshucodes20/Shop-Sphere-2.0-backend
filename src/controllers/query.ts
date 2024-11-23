@@ -86,6 +86,23 @@ export const updateQueryStatus=TryCatch(
     }
 )
 
+export const getAdminPendingReUsableProducts=TryCatch(
+    async(req,res,next)=>{
+        const pendingProducts=await ProductQuery.find({queryStatus:"success"});
+        if(pendingProducts.length===0){
+            return next(new ErrorHandler("No Pending Products  found",404));
+        }
+        res.status(200).json({
+            success:true,
+            pendingProducts
+        })
+    }
+)
+
+
+
+
+
 
 
 export const newQuery=TryCatch(
@@ -240,4 +257,5 @@ export const updateUserQuery=TryCatch(
     })
 }
 )
+
 

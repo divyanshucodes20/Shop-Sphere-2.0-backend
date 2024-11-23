@@ -13,8 +13,9 @@ import {
 } from "../utils/features.js";
 import ErrorHandler from "../utils/utility-class.js";
 import { ReUsableProduct } from "../models/reUsable.js";
+import { ProductQuery } from "../models/query.js";
 
-// Revalidate on New,Update,Delete Product & on New Order
+
 export const getlatestReUsableProducts = TryCatch(async (req, res, next) => {
   let products;
 
@@ -32,7 +33,6 @@ export const getlatestReUsableProducts = TryCatch(async (req, res, next) => {
   });
 });
 
-// Revalidate on New,Update,Delete Product & on New Order
 export const getAllReUsableCategories = TryCatch(async (req, res, next) => {
   let categories;
 
@@ -47,24 +47,6 @@ export const getAllReUsableCategories = TryCatch(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     categories,
-  });
-});
-
-// Revalidate on New,Update,Delete Product & on New Order
-export const getAdminReUsableProductQueries = TryCatch(async (req, res, next) => {
-  let products;
-
-  products = await redis.get("all-reusable-products");
-
-  if (products) products = JSON.parse(products);
-  else {
-    products = await ReUsableProduct.find({});
-    await redis.setex("all-reusable-products", redisTTL, JSON.stringify(products));
-  }
-
-  return res.status(200).json({
-    success: true,
-    products,
   });
 });
 
@@ -85,72 +67,6 @@ export const getSingleReUsableProduct = TryCatch(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     product,
-  });
-});
-
-export const newReUsableProduct = TryCatch(
-  async (req: Request<{}, {}, NewReUsableProductRequestBody>, res, next) => {
-    const { name, price, stock, category, description,userId,userName } = req.body;
-    const photos = req.files as Express.Multer.File[] | undefined;
-
-    if (!photos) return next(new ErrorHandler("Please add Photo", 400));
-
-    if (photos.length < 1)
-      return next(new ErrorHandler("Please add atleast one Photo", 400));
-
-    if (photos.length > 5)
-      return next(new ErrorHandler("You can only upload 5 Photos", 400));
-
-    if (!name || !price || !stock || !category || !description)
-      return next(new ErrorHandler("Please enter All Fields", 400));
-
-    // Upload Here
-    if(!userId || !userName) return next(new ErrorHandler("Please Login to add Product", 400));
-
-    const photosURL = await uploadToCloudinary(photos);
-
-    await ReUsableProduct.create({
-      name,
-      price,
-      description,
-      stock,
-      category: category.toLowerCase(),
-      photos: photosURL,
-      userId,
-     userName
-    });
-
-    await invalidateCache({ reUsableProduct: true});
-
-    return res.status(201).json({
-      success: true,
-      message: "Product Creation Request Sent Successfully",
-    });
-  }
-);
-
-
-
-export const deleteReUsableProductQuery = TryCatch(async (req, res, next) => {
-  const product = await ReUsableProduct.findById(req.params.id);
-  if (!product) return next(new ErrorHandler("Product Not Found", 404));
-
-  const ids = product.photos.map((photo) => photo.public_id);
-
-  await deleteFromCloudinary(ids);
-   
-
-  await product.deleteOne();
-
-  await invalidateCache({
-    reUsableProduct: true,
-    reUsableProductId: String(product._id),
-    admin: true,
-  });
-
-  return res.status(200).json({
-    success: true,
-    message: "Product Query Deleted Successfully",
   });
 });
 
@@ -216,12 +132,138 @@ export const getAllReUSableProducts = TryCatch(
   }
 );
 
-export const deleteReUsableProductCreationRequest = TryCatch(
-    async (req, res, next) => {
-     
-    
+export const getAdminReUsableProducts = TryCatch(async (req, res, next) => {
+  const products = await ReUsableProduct.find({});
+   
+  if (!products) return next(new ErrorHandler("No Products Found", 404));
 
+  return res.status(200).json({
+    success: true,
+    products,
+  });
+});
+
+
+export const newReUsableProduct = TryCatch(
+  async (req: Request<{}, {}, NewReUsableProductRequestBody>, res, next) => {
+    const { userEmail,userId,productDetails:{
+      name,
+      price,
+      stock,
+      category,
+      description,
+    },commission } = req.body;
+    const photos = req.files as Express.Multer.File[] | undefined;
+
+    if (!photos) return next(new ErrorHandler("Please add Photo", 400));
+
+    if (photos.length < 1)
+      return next(new ErrorHandler("Please add atleast one Photo", 400));
+
+    if (photos.length > 5)
+      return next(new ErrorHandler("You can only upload 5 Photos", 400));
+
+    if (!name || !price || !stock || !category || !description)
+      return next(new ErrorHandler("Please enter All Fields", 400));
+
+
+    const photosURL = await uploadToCloudinary(photos);
+
+    await ReUsableProduct.create({
+      productDetails:{
+      name,
+      price,
+      description,
+      stock,
+      category: category.toLowerCase(),
+      photos: photosURL
+      },
+      userEmail,
+      userId,
+      commission
+    });
+
+    await invalidateCache({ reUsableProduct:true});
+
+    return res.status(201).json({
+      success: true,
+      message: "ReUsableProduct Created Successfully",
+    });
+  }
+);
+
+export const updateReUsableProduct = TryCatch(async (req, res, next) => {
+  const { id } = req.params;
+  const {productDetails:{
+    name,
+    price,
+    stock,
+    category,
+    description,
+  },commission } = req.body;
+  const photos = req.files as Express.Multer.File[] | undefined;
+
+  const product = await ReUsableProduct.findById(id);
+  
+  if (!product) return next(new ErrorHandler("Product Not Found", 404));
+
+  if (photos && photos.length > 0) {
+    const photosURL = await uploadToCloudinary(photos);
+
+    const ids = product.productDetails?.photos.map((photo) => photo.public_id);
+
+    if (ids) {
+      await deleteFromCloudinary(ids);
     }
-)
 
+    if (product.productDetails) {
+      product.productDetails.photos = photosURL;
+    }
+  }
 
+  if (name && product.productDetails) product.productDetails.name = name;
+  if (price && product.productDetails) product.productDetails.price = price;
+  if (stock && product.productDetails) product.productDetails.stock = stock;
+  if (category && product.productDetails) product.productDetails.category = category;
+  if (description && product.productDetails) product.productDetails.description = description;
+  if (commission) product.commission = commission;
+
+  await product.save();
+
+  await invalidateCache({
+  reUsableProduct:true,
+  reUsableProductId: String(product._id),
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "ReUsableProduct Updated Successfully",
+  });
+});
+
+export const deleteProduct = TryCatch(async (req, res, next) => {
+  const product = await ReUsableProduct.findById(req.params.id);
+  if (!product) return next(new ErrorHandler("Product Not Found", 404));
+
+  const ids = product.productDetails?.photos.map((photo) => photo.public_id);
+
+  if (ids) {
+    await deleteFromCloudinary(ids);
+  }
+
+  const queries=ProductQuery.find({productId:product._id});
+   await Promise.all([
+      product.deleteOne(),
+      queries.deleteMany()
+    ]);  
+  await invalidateCache({
+    product: true,
+    productId: String(product._id),
+    admin: true,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Product Deleted Successfully",
+  });
+});

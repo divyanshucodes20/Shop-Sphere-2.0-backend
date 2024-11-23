@@ -31,6 +31,7 @@ const querySchema = new Schema(
       stock: {
         type: Number,
         required: true,
+        min:[1,"Stock must be greater than 0"],
       },
       photos: [
         {

@@ -7,49 +7,58 @@ const schema = new mongoose.Schema(
        required:[true, "Please enter User"],
        ref: "User",
     },
-    userName:{
+    userEmail:{
       type:String,
-      required:[true, "Please enter User Name"],
-      ref: "User"
+      required:[true, "Please enter User Email"],
     },
-    name: {
-      type: String,
-      required: [true, "Please enter Name"],
-    },
-    photos: [
-      {
-        public_id: {
-          type: String,
-          required: [true, "Please enter Public ID"],
-        },
-        url: {
-          type: String,
-          required: [true, "Please enter URL"],
-        },
+    productDetails: {
+      name: {
+        type: String,
+        required: [true, "Product name is required"],
       },
-    ],
-    price: {
+      category: {
+        type: String,
+        required: [true, "Product category is required"],
+        trim: true,
+      },
+      description: {
+        type: String,
+        required: [true, "Product description is required"],
+      },
+      price: {
+        type: Number,
+        required: [true, "Product price is required"],
+      },
+      stock: {
+        type: Number,
+        required: [true, "Product stock is required"],
+      },
+      photos: [
+        {
+          public_id: {
+            type: String,
+            required: [true, "Photo public ID is required"],
+          },
+          url: {
+            type: String,
+            required: [true, "Photo URL is required"],
+          },
+        },
+      ],
+    },
+    commission: {
       type: Number,
-      required: [true, "Please enter Price"],
-    },
-    stock: {
-      type: Number,
-      required: [true, "Please enter Stock"],
-    },
-    category: {
-      type: String,
-      required: [true, "Please enter Category"],
-      trim: true,
-    },
-
-    description: {
-      type: String,
-      required: [true, "Please enter Description"],
-    },
+      default: 0,
+    }
   },
   {
     timestamps: true,
   }
 );
+schema.virtual("totalPrice").get(function () {
+  return this.productDetails?.price! + this.commission;
+});
+
+
 
 export const ReUsableProduct = mongoose.model("ReUsableProduct", schema);

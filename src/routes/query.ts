@@ -8,7 +8,7 @@ import {
     updateQueryStatus,
     deleteQuery,
     deleteUserQuery,
-    updateUserQuery
+    updateUserQuery,getAdminPendingReUsableProducts
 } from "../controllers/query.js";
 import { adminOnly } from "../middlewares/auth.js";
 
@@ -23,6 +23,7 @@ router.get("/pickups", adminOnly, getAllAdminPickUps);
 router.get("/all", adminOnly, getAllAdminQueries);
 router.put("/:id", adminOnly, updateQueryStatus);
 router.delete("/:id", adminOnly, deleteQuery);
+router.get("/pending", adminOnly, getAdminPendingReUsableProducts);
 
 
 export default router;
