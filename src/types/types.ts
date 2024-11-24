@@ -90,23 +90,13 @@ export interface NewReUsableProductRequestBody {
   commission?: number;
 }
 export interface NewQueryRequestBody {
-  userId: string;
-  productDetails: {
     name: string;
     category: string;
-    description: string;
     price: number;
     stock: number;
-    photos: {
-      public_id: string;
-      url: string;
-    }[];
-  };
-  queryStatus?: "pending" | "approved"|"success";
-  pickupDetails: {
+    description: string;
     pickupAddress: string;
     pickupCity: string;
     pickupPostalCode: string;
-  };
 }
 

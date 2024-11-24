@@ -50,25 +50,25 @@ export const getQueryById=TryCatch(
 
 export const getAllAdminQueries=TryCatch(
     async(req,res,next)=>{
-        const pendingQueries=await ProductQuery.find({queryStatus:"pending"});
-        if(pendingQueries.length===0){
+        const queries=await ProductQuery.find({queryStatus:"pending"});
+        if(queries.length===0){
             return next(new ErrorHandler("No queries found",404));
         }
         res.status(200).json({
             success:true,
-            pendingQueries
+            queries
         })
     }
 )
 export const getAllAdminPickUps=TryCatch(
     async(req,res,next)=>{
-        const  pickUps=await ProductQuery.find({queryStatus:"approved"});
-        if(pickUps.length===0){
+        const  queries=await ProductQuery.find({queryStatus:"approved"});
+        if(queries.length===0){
             return next(new ErrorHandler("No queries found",404));
         }
         res.status(200).json({
             success:true,
-            pickUps
+            queries
         })
     }
 )
@@ -96,13 +96,13 @@ export const updateQueryStatus=TryCatch(
 
 export const getAdminPendingReUsableProducts=TryCatch(
     async(req,res,next)=>{
-        const pendingProducts=await ProductQuery.find({queryStatus:"success"});
-        if(pendingProducts.length===0){
+        const queries=await ProductQuery.find({queryStatus:"success"});
+        if(queries.length===0){
             return next(new ErrorHandler("No Pending Products  found",404));
         }
         res.status(200).json({
             success:true,
-            pendingProducts
+            queries
         })
     }
 )
@@ -113,66 +113,51 @@ export const getAdminPendingReUsableProducts=TryCatch(
 
 
 
-export const newQuery=TryCatch(
-    async(req: Request<{}, {}, NewQueryRequestBody>,res,next)=>{
-        const {userId}=req.body;
-        if(!userId){
-            return next(new ErrorHandler("Login first to post a query",401));
-        }
-        const user=await User.findById(userId)
-        if(!user){
-            return next(new ErrorHandler("No user found",404));
-        }
-        if(user.role!=="user"){
-            return next(new ErrorHandler("Only users can post queries",401));
-        }
-        const {
-            productDetails: { name, category, description, price, stock},
-            pickupDetails: { pickupAddress, pickupCity, pickupPostalCode },
-          } = req.body;
-          const photos = req.files as Express.Multer.File[] | undefined;
-          if (!photos) return next(new ErrorHandler("Please add Photo", 400));
 
-          if (photos.length < 1)
-            return next(new ErrorHandler("Please add atleast one Photo", 400));
-
-         if (photos.length > 5)
-           return next(new ErrorHandler("You can only upload 5 Photos", 400));
-
+export const newQuery = TryCatch(
+  async (req: Request<{}, {}, NewQueryRequestBody>, res, next) => {
+    const {userId}=req.query
+    const { name, price, stock, category, description,pickupAddress,
+        pickupCity,pickupPostalCode
+     } = req.body;
     
-          if (!name || !category || !description || !price || !stock) {
-            return next(new ErrorHandler("All product details are required", 400));
-          }
-      
-          if (!pickupAddress || !pickupCity|| !pickupPostalCode) {
-            return next(new ErrorHandler("Pickup address and city are required", 400));
-          }
-          const photosURL = await uploadToCloudinary(photos);
-          const newQuery = new ProductQuery({
-            userId,
-            productDetails: {
-              name,
-              category,
-              description,
-              price,
-              stock,
-              photos: photosURL,
-            },
-            pickupDetails: {
-              pickupAddress,
-              pickupCity,
-              pickupPostalCode
-            },
-          });
-          await newQuery.save();
-      
-          res.status(201).json({
-            success: true,
-            message: "Query posted successfully",
-          });
-    }
-)
 
+    const photos = req.files as Express.Multer.File[] | undefined;
+
+    if (!photos || photos.length === 0) {
+      return next(new ErrorHandler("Please upload at least one photo", 400));
+    }
+    if(photos.length>5){
+        return next(new ErrorHandler("Cannot upload more than 5 photos",400));
+    }
+    if (!name || !price || !stock || !category || !description || !pickupAddress || !pickupCity || !pickupPostalCode)
+        return next(new ErrorHandler("Please enter All Fields", 400));
+
+    const photosURL = await uploadToCloudinary(photos);
+
+    await   ProductQuery.create({
+      productDetails:{
+      name,
+      price,
+      description,
+      stock,
+      category: category.toLowerCase(),
+      photos: photosURL,
+      },
+        pickupDetails:{
+            pickupAddress,
+            pickupCity,
+            pickupPostalCode
+        },
+        userId,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Query Created Successfully",
+    });
+  }
+);
 
 export const deleteQuery=TryCatch(
     async(req,res,next)=>{
@@ -237,7 +222,7 @@ export const deleteUserQuery=TryCatch(
 export const updateUserQuery = TryCatch(
     async (req, res, next) => {
       const { id } = req.params; // Get the query ID from the route parameters
-      const { userId } = req.body; // Get the user ID from the request body
+      const { userId } = req.query; // Get the user ID from the request body
   
       // Check if user is logged in
       if (!userId) {
@@ -267,8 +252,7 @@ export const updateUserQuery = TryCatch(
   
       // Destructure product details and pickup details from request body
       const {
-        productDetails: { name, category, description, price, stock } = {},
-        pickupDetails: { pickupAddress, pickupCity, pickupPostalCode } = {},
+        name,description,price,stock,category,pickupAddress,pickupCity,pickupPostalCode
       } = req.body;
   
       // Check for uploaded photos and handle Cloudinary uploads
