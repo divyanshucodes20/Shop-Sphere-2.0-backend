@@ -1,15 +1,33 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
-const schema = new mongoose.Schema(
+// Define the ReUsableProduct interface
+interface ProductDetails {
+  name: string;
+  price: number;
+  category: string;
+  description: string;
+  stock: number;
+  photos: { public_id: string; url: string }[];
+}
+
+export interface ReUsableProductDocument extends Document {
+  userId: string;
+  userEmail: string;
+  productDetails?: ProductDetails;
+  commission: number;
+  totalPrice?: number; // Add the virtual property
+}
+
+const schema = new mongoose.Schema<ReUsableProductDocument>(
   {
-    userId:{
-       type:String,
-       required:[true, "Please enter User"],
-       ref: "User",
+    userId: {
+      type: String,
+      required: [true, "Please enter User"],
+      ref: "User",
     },
-    userEmail:{
-      type:String,
-      required:[true, "Please enter User Email"],
+    userEmail: {
+      type: String,
+      required: [true, "Please enter User Email"],
     },
     productDetails: {
       name: {
@@ -49,16 +67,21 @@ const schema = new mongoose.Schema(
     commission: {
       type: Number,
       default: 0,
-    }
+    },
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
-schema.virtual("totalPrice").get(function () {
-  return this.productDetails?.price! + this.commission;
+
+// Define the virtual property
+schema.virtual("totalPrice").get(function (this: ReUsableProductDocument) {
+  return (this.productDetails?.price ?? 0) + this.commission;
 });
 
-
-
-export const ReUsableProduct = mongoose.model("ReUsableProduct", schema);
+export const ReUsableProduct = mongoose.model<ReUsableProductDocument>(
+  "ReUsableProduct",
+  schema
+);

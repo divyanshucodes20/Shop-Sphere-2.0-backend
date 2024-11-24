@@ -10,10 +10,13 @@ export const getUserPendingPayments=TryCatch(
         if(!id){
             return next(new ErrorHandler("Login to view your pending payments",400));
         }
-        const payments=UserPayment.find({userId:id,paymentStatus:"pending"});
+        const payments=await UserPayment.find({userId:id,paymentStatus:"pending"});
         if(!payments){
             return next(new ErrorHandler("No pending payments found",404));
         }
+        if (payments.length === 0) {
+            return next(new ErrorHandler("No pending payments found", 404));
+        }        
         res.status(200).json({
             success:true,
             payments
@@ -28,10 +31,14 @@ export const getUserCompletedPayments=TryCatch(
         if(!id){
             return next(new ErrorHandler("Login to view your completed payments",400));
         }
-        const payments=UserPayment.find({userId:id,paymentStatus:"completed"});
+        const payments=await UserPayment.find({userId:id,paymentStatus:"completed"});
         if(!payments){
             return next(new ErrorHandler("No completed payments found",404));
         }
+        if (payments.length === 0) {
+            return next(new ErrorHandler("No pending payments found", 404));
+        }
+        
         res.status(200).json({
             success:true,
             payments
@@ -41,10 +48,13 @@ export const getUserCompletedPayments=TryCatch(
 
 export const getAllPendingPayments=TryCatch(
     async(req,res,next)=>{
-        const payments=UserPayment.find({paymentStatus:"pending"});
+        const payments=await UserPayment.find({paymentStatus:"pending"});
         if(!payments){
             return next(new ErrorHandler("No pending payments found",404));
         }
+        if (payments.length === 0) {
+    return next(new ErrorHandler("No pending payments found", 404));
+}
         res.status(200).json({
             success:true,
             payments
@@ -75,8 +85,8 @@ export const  processPayment=TryCatch(
         }
         if(payment.paymentStatus==="pending"){
             payment.paymentStatus="completed";
+            await payment.save();
         }
-        await payment.deleteOne();
         res.status(200).json({
             success:true,
             message:"Payment completed successfully"

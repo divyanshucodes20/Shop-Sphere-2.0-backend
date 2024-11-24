@@ -14,9 +14,9 @@ import { adminOnly } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-router.get("/user/query", getQueriesByUserId);
-router.put("/user/query/:id", updateUserQuery);
-router.delete("/user/query/:id", deleteUserQuery);
+router.get("/user/", getQueriesByUserId);
+router.put("/user/:id", updateUserQuery);
+router.delete("/user/:id", deleteUserQuery);
 router.post("/new", newQuery);
 router.get("/:id", getQueryById);
 router.get("/pickups", adminOnly, getAllAdminPickUps);

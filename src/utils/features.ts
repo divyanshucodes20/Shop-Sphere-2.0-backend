@@ -142,7 +142,33 @@ export const invalidateCache = async ({
     ]);
   }
 };
+export const checkStockOfReUsableProductAndDelete = async (
+  productId: string,
+  quantity: number
+) => {
+  const product = await ReUsableProduct.findById(productId);
 
+  if (!product) return;
+
+  if (product.productDetails?.stock === quantity) {
+    const ids = product.productDetails?.photos.map((photo) => photo.public_id);
+
+    if (ids && ids.length > 0) {
+      await deleteFromCloudinary(ids);
+    }
+
+    // Directly delete the product without handling queries again
+    await product.deleteOne();
+  } else {
+    product.productDetails!.stock -= quantity;
+    await product.save();
+  }
+
+  await invalidateCache({
+    reUsableProduct: true,
+    reUsableProductId: String(product._id),
+  });
+};
 export const reduceStock = async (orderItems: OrderItemType[]) => {
   for (let i = 0; i < orderItems.length; i++) {
     const order = orderItems[i];
@@ -250,31 +276,4 @@ try {
 
 
 }
-export const checkStockOfReUsableProductAndDelete = async (productId: string,quantity:number) => {
 
-const product=await ReUsableProduct.findById(productId);
-
-if(!product) return;
-
-if(product.productDetails?.stock===quantity){
-  const ids = product.productDetails?.photos.map((photo) => photo.public_id);
-
-  if (ids) {
-    await deleteFromCloudinary(ids);
-  }
-
-  const queries=ProductQuery.find({productId:product._id});
-   await Promise.all([
-      product.deleteOne(),
-      queries.deleteMany()
-    ]);  
-  await invalidateCache({
-    reUsableProduct: true,
-    reUsableProductId: String(product._id),
-  });
-}
-else{
-  product.productDetails!.stock-=quantity;
-  await product.save();
-}
-}

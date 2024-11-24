@@ -80,28 +80,31 @@ export const newOrder = TryCatch(
       total,
     } = req.body;
 
-    if (!shippingInfo || !orderItems || !user || !subtotal || !tax || !total)
+    if (!shippingInfo || !orderItems || !user || !subtotal || !tax || !total) {
       return next(new ErrorHandler("Please Enter All Fields", 400));
+    }
 
-    if (orderItems.length === 0)
+    if (orderItems.length === 0) {
       return next(new ErrorHandler("Please Add Items to Order", 400));
+    }
 
     const reusableData = await Promise.all(
       orderItems.map(async (item) => {
         const reusableProduct = await ReUsableProduct.findById(item.productId);
+
         if (reusableProduct) {
+          // Check stock and handle deletion or stock reduction
           await checkStockOfReUsableProductAndDelete(item.productId, item.quantity);
 
-          // Calculate amount and commission
-          const itemPrice = reusableProduct.productDetails?.price ?? 0;
-          const totalAmount = itemPrice * item.quantity;
+          // Use virtual property `totalPrice` to calculate total amount
+          const totalAmount = (reusableProduct.totalPrice ?? 0) * item.quantity;
           const totalCommission = reusableProduct.commission * item.quantity;
 
-          // Create payment entry for reusable items
+          // Create pending payment entry for the reusable product
           await UserPayment.create({
             userId: user,
             reusableProductId: item.productId,
-            amount: totalAmount - totalCommission, // Pending payment to user
+            amount: totalAmount - totalCommission, // Pending payment for the user
           });
 
           return {
@@ -110,6 +113,7 @@ export const newOrder = TryCatch(
             totalAmount,
           };
         }
+
         return null;
       })
     );
@@ -130,7 +134,8 @@ export const newOrder = TryCatch(
 
     // Reduce stock for non-reusable products
     const nonReusableItems = orderItems.filter(
-      (item) => !filteredReUsables.find((reusable) => reusable?.item.productId === item.productId)
+      (item) =>
+        !filteredReUsables.find((reusable) => reusable?.item.productId === item.productId)
     );
 
     if (nonReusableItems.length > 0) {
@@ -152,6 +157,7 @@ export const newOrder = TryCatch(
     });
   }
 );
+
 
 
 export const processOrder = TryCatch(async (req, res, next) => {
