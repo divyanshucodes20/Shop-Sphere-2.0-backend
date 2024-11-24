@@ -277,3 +277,17 @@ try {
 
 }
 
+export const sendProductAcceptanceEmail = async (email: string,productName:string) => {
+   
+  try {
+   
+    await resend.emails.send({
+    from: "ShopSphere <no-reply@shopsphere.com>",
+    to: email,
+    subject: "Product Accepted",
+    html: `<p>Your product <b>${productName}</b> has been accepted and will be forwarded to our shop</p>`,});
+  } catch (error) {
+    console.error(`Failed to send notification email to ${email}:`, error);
+  }
+    
+    }

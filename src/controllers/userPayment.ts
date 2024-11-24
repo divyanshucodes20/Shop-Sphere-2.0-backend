@@ -6,7 +6,7 @@ import ErrorHandler from "../utils/utility-class.js";
 
 export const getUserPendingPayments=TryCatch(
     async(req,res,next)=>{
-        const {userId}=req.body;
+        const {userId}=req.query;
         if(!userId){
             return next(new ErrorHandler("Login to view your pending payments",400));
         }
@@ -27,7 +27,7 @@ export const getUserPendingPayments=TryCatch(
 
 export const getUserCompletedPayments=TryCatch(
     async(req,res,next)=>{
-        const {userId}=req.body;
+        const {userId}=req.query;
         if(!userId){
             return next(new ErrorHandler("Login to view your completed payments",400));
         }
@@ -48,7 +48,7 @@ export const getUserCompletedPayments=TryCatch(
 
 export const getUserPayments=TryCatch(
     async(req,res,next)=>{
-        const {userId}=req.body;
+        const {userId}=req.query;
         if(!userId){
             return next(new ErrorHandler("Login to view your payments",400));
         }

@@ -9,6 +9,7 @@ import {
 import {
   deleteFromCloudinary,
   invalidateCache,
+  sendProductAcceptanceEmail,
   uploadToCloudinary,
 } from "../utils/features.js";
 import ErrorHandler from "../utils/utility-class.js";
@@ -173,7 +174,9 @@ export const newReUsableProduct = TryCatch(
         // Delete all photos from Cloudinary
         await deleteFromCloudinary(ids);
       }
-
+      if (query.productDetails?.name) {
+        await sendProductAcceptanceEmail(query.userId, query.productDetails.name);
+      }
       // Remove the query after handling its photos
       await ProductQuery.findByIdAndDelete(query._id);
     }
@@ -281,7 +284,7 @@ export const deleteReUsableProduct = TryCatch(async (req, res, next) => {
 
 
 export const getUserReUsableProducts = TryCatch(async (req, res, next) => {
-  const {userId}=req.body;
+  const {userId}=req.query;
   if(!userId) return next(new ErrorHandler("Please provide userId", 400));
   const products = await ReUsableProduct.find({userId});
   if (!products) return next(new ErrorHandler("No Products Found", 404));
@@ -293,6 +296,8 @@ export const getUserReUsableProducts = TryCatch(async (req, res, next) => {
   });
 
 });
+
+
 
 
 

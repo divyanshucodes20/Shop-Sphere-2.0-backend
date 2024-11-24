@@ -9,7 +9,7 @@ import { deleteFromCloudinary, sendQueryRejectionEmail, uploadToCloudinary } fro
 
 export const getQueriesByUserId=TryCatch(
     async(req,res,next)=>{
-        const {userId}=req.body;
+        const {userId}=req.query;
         if(!userId){
             return next(new ErrorHandler("Login first to get queries",401));
         }
