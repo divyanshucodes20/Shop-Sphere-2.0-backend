@@ -1,6 +1,6 @@
 import express from "express";
 import {getAdminReUsableProducts,getAllReUSableProducts,getAllReUsableCategories,
-    getSingleReUsableProduct,getlatestReUsableProducts,newReUsableProduct,updateReUsableProduct,deleteReUsableProduct
+    getSingleReUsableProduct,getlatestReUsableProducts,newReUsableProduct,updateReUsableProduct,deleteReUsableProduct,getUserReUsableProducts
 } from "../controllers/reUsable.js";
 import { adminOnly } from "../middlewares/auth.js";
 
@@ -8,6 +8,7 @@ import { adminOnly } from "../middlewares/auth.js";
 
 const router = express.Router();
 
+router.get("/user/all", getUserReUsableProducts);
 router.get("/all", getAllReUSableProducts);
 router.get("/admin/all", getAdminReUsableProducts);
 router.get("/categories", getAllReUsableCategories);

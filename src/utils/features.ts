@@ -260,7 +260,7 @@ export const sendNotificationEmail = async (email: string, productName: string) 
 };
 
 
-export const sendQueryRejectionEmail = async (email: string, queryId: string,productName:string) => {
+export const sendQueryRejectionEmail = async (email: string,productName:string) => {
    
 try {
  

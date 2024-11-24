@@ -12,10 +12,9 @@ interface ProductDetails {
 
 export interface ReUsableProductDocument extends Document {
   userId: string;
-  userEmail: string;
   productDetails?: ProductDetails;
   commission: number;
-  totalPrice?: number; // Add the virtual property
+  totalPrice?: number;
 }
 
 const schema = new mongoose.Schema<ReUsableProductDocument>(
@@ -24,10 +23,6 @@ const schema = new mongoose.Schema<ReUsableProductDocument>(
       type: String,
       required: [true, "Please enter User"],
       ref: "User",
-    },
-    userEmail: {
-      type: String,
-      required: [true, "Please enter User Email"],
     },
     productDetails: {
       name: {

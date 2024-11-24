@@ -2,14 +2,10 @@ import mongoose, { Schema } from "mongoose";
 
 const querySchema = new Schema(
   {
+   
    userId:{
     type:String,
-    required:[true,"User Id is required"],
-    ref:"User"
-   },
-   userEmail:{
-    type:String,
-    required:[true,"User Email is required"],
+    required:[true,"User must be provided"],
    },
     productDetails: {
       name: {

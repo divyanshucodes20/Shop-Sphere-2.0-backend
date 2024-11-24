@@ -136,6 +136,7 @@ export const getAdminReUsableProducts = TryCatch(async (req, res, next) => {
   const products = await ReUsableProduct.find({});
    
   if (!products) return next(new ErrorHandler("No Products Found", 404));
+  if(products.length === 0) return next(new ErrorHandler("No Products Found", 404));
 
   return res.status(200).json({
     success: true,
@@ -147,7 +148,6 @@ export const getAdminReUsableProducts = TryCatch(async (req, res, next) => {
 export const newReUsableProduct = TryCatch(
   async (req: Request<{}, {}, NewReUsableProductRequestBody>, res, next) => {
     const {
-      userEmail,
       userId,
       productDetails: { name, price, stock, category, description },
       commission,
@@ -191,7 +191,6 @@ export const newReUsableProduct = TryCatch(
         category: category.toLowerCase(),
         photos: photosURL,
       },
-      userEmail,
       userId,
       commission,
     });
@@ -278,6 +277,21 @@ export const deleteReUsableProduct = TryCatch(async (req, res, next) => {
     success: true,
     message: "Product Deleted Successfully",
   });
+});
+
+
+export const getUserReUsableProducts = TryCatch(async (req, res, next) => {
+  const {userId}=req.body;
+  if(!userId) return next(new ErrorHandler("Please provide userId", 400));
+  const products = await ReUsableProduct.find({userId});
+  if (!products) return next(new ErrorHandler("No Products Found", 404));
+  if(products.length === 0) return next(new ErrorHandler("No Products Found", 404));
+  
+  return res.status(200).json({
+    success: true,
+    products
+  });
+
 });
 
 

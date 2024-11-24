@@ -9,7 +9,7 @@ import { deleteFromCloudinary, sendQueryRejectionEmail, uploadToCloudinary } fro
 
 export const getQueriesByUserId=TryCatch(
     async(req,res,next)=>{
-        const {userId}=req.query;
+        const {userId}=req.body;
         if(!userId){
             return next(new ErrorHandler("Login first to get queries",401));
         }
@@ -115,7 +115,7 @@ export const getAdminPendingReUsableProducts=TryCatch(
 
 export const newQuery=TryCatch(
     async(req: Request<{}, {}, NewQueryRequestBody>,res,next)=>{
-        const {userId}=req.query;
+        const {userId}=req.body;
         if(!userId){
             return next(new ErrorHandler("Login first to post a query",401));
         }
@@ -150,7 +150,6 @@ export const newQuery=TryCatch(
           const photosURL = await uploadToCloudinary(photos);
           const newQuery = new ProductQuery({
             userId,
-            userEmail:user.email,
             productDetails: {
               name,
               category,
@@ -185,7 +184,13 @@ export const deleteQuery=TryCatch(
         if(!query){
             return next(new ErrorHandler("No query found",404));
         }
-        await sendQueryRejectionEmail(query.userEmail,query.productDetails?.name!,id);
+        const userId=query.userId;
+        const user=await User.findById(userId);
+        if (user?.email && query.productDetails?.name) {
+            await sendQueryRejectionEmail(user.email, query.productDetails.name);
+        } else {
+            return next(new ErrorHandler("User email or product name is missing", 400));
+        }
 
         const ids = query.productDetails?.photos.map((photo) => photo.public_id);
 
@@ -201,7 +206,7 @@ export const deleteQuery=TryCatch(
 export const deleteUserQuery=TryCatch(
     async(req,res,next)=>{
         const {id}=req.params;
-        const {userId}=req.query;
+        const {userId}=req.body;
         if(!userId){
             return next(new ErrorHandler("Login first to delete a query",401));
         }
@@ -232,7 +237,7 @@ export const deleteUserQuery=TryCatch(
 export const updateUserQuery = TryCatch(
     async (req, res, next) => {
       const { id } = req.params; // Get the query ID from the route parameters
-      const { userId } = req.query; // Get the user ID from query parameters
+      const { userId } = req.body; // Get the user ID from the request body
   
       // Check if user is logged in
       if (!userId) {

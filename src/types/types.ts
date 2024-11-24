@@ -80,7 +80,6 @@ export interface NewOrderRequestBody {
 }
 export interface NewReUsableProductRequestBody {
   userId: string;
-  userEmail: string;
   productDetails: {
     name: string;
     category: string;
