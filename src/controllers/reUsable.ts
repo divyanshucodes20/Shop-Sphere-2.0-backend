@@ -148,20 +148,23 @@ export const getAdminReUsableProducts = TryCatch(async (req, res, next) => {
 
 
 export const newReUsableProduct = TryCatch(
-  async (req: Request<{}, {}, NewReUsableProductRequestBody>, res, next) => {
+  async (req: Request, res, next) => {
     const {
       userId,
-      productDetails: { name, price, stock, category, description },
       commission,
     } = req.body;
+    let productDetails;
+    try {
+      productDetails = JSON.parse(req.body.productDetails);
+    } catch (error) {
+      return next(new ErrorHandler("Invalid Product Details", 400));
+    }
+
+    const { name, price, stock, category, description } = productDetails;
 
     const photos = req.files as Express.Multer.File[] | undefined;
 
     if (!photos) return next(new ErrorHandler("Please add Photo", 400));
-    if (photos.length < 1)
-      return next(new ErrorHandler("Please add at least one Photo", 400));
-    if (photos.length > 5)
-      return next(new ErrorHandler("You can only upload up to 5 Photos", 400));
     if (!name || !price || !stock || !category || !description)
       return next(new ErrorHandler("Please enter All Fields", 400));
 

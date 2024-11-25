@@ -1,6 +1,5 @@
 import mongoose, {Document } from "mongoose";
 
-// Define the ReUsableProduct interface
 interface ProductDetails {
   name: string;
   price: number;
