@@ -191,7 +191,7 @@ export const deleteQuery=TryCatch(
 export const deleteUserQuery=TryCatch(
     async(req,res,next)=>{
         const {id}=req.params;
-        const {userId}=req.body;
+        const {userId}=req.query;
         if(!userId){
             return next(new ErrorHandler("Login first to delete a query",401));
         }

@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, {Document } from "mongoose";
 
 // Define the ReUsableProduct interface
 interface ProductDetails {
@@ -71,7 +71,6 @@ const schema = new mongoose.Schema<ReUsableProductDocument>(
   }
 );
 
-// Define the virtual property
 schema.virtual("totalPrice").get(function (this: ReUsableProductDocument) {
   return (this.productDetails?.price ?? 0) + this.commission;
 });
