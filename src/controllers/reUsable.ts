@@ -15,6 +15,7 @@ import {
 import ErrorHandler from "../utils/utility-class.js";
 import { ReUsableProduct } from "../models/reUsable.js";
 import { ProductQuery } from "../models/query.js";
+import { sendProductDeletionEmail } from "../utils/emails.js";
 
 
 export const getlatestReUsableProducts = TryCatch(async (req, res, next) => {
@@ -267,6 +268,8 @@ export const deleteReUsableProduct = TryCatch(async (req, res, next) => {
   if (ids && ids.length > 0) {
     await deleteFromCloudinary(ids);
   }
+
+   sendProductDeletionEmail(product.userId, product.productDetails?.name!);
 
   // Delete the product directly since queries were already handled earlier
   await product.deleteOne();

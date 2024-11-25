@@ -8,6 +8,7 @@ import { InvalidateCacheProps, OrderItemType } from "../types/types.js";
 import { ReUsableProduct } from "../models/reUsable.js";
 import { ProductQuery } from "../models/query.js";
 import { UserPayment } from "../models/userPayment.js";
+import { sendProductDeletionEmailDueToShortage } from "./emails.js";
 
 
 
@@ -156,8 +157,7 @@ export const checkStockOfReUsableProductAndDelete = async (
     if (ids && ids.length > 0) {
       await deleteFromCloudinary(ids);
     }
-
-    // Directly delete the product without handling queries again
+    sendProductDeletionEmailDueToShortage(product.userId, product.productDetails?.name!);
     await product.deleteOne();
   } else {
     product.productDetails!.stock -= quantity;
