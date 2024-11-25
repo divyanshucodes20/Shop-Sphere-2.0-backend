@@ -3,7 +3,6 @@ import { redis, redisTTL } from "../app.js";
 import { TryCatch } from "../middlewares/error.js";
 import {
   BaseQuery,
-  NewReUsableProductRequestBody,
   SearchRequestQuery,
 } from "../types/types.js";
 import {
@@ -16,6 +15,7 @@ import ErrorHandler from "../utils/utility-class.js";
 import { ReUsableProduct } from "../models/reUsable.js";
 import { ProductQuery } from "../models/query.js";
 import { sendProductDeletionEmail } from "../utils/emails.js";
+import { User } from "../models/user.js";
 
 
 export const getlatestReUsableProducts = TryCatch(async (req, res, next) => {
@@ -147,81 +147,74 @@ export const getAdminReUsableProducts = TryCatch(async (req, res, next) => {
 });
 
 
-export const newReUsableProduct = TryCatch(
-  async (req: Request, res, next) => {
-    const {
-      userId,
-      commission,
-    } = req.body;
-    let productDetails;
-    try {
-      productDetails = JSON.parse(req.body.productDetails);
-    } catch (error) {
-      return next(new ErrorHandler("Invalid Product Details", 400));
-    }
+export const newReUsableProduct = TryCatch(async (req: Request, res, next) => {
+  const { userId, commission,queryId } = req.body;
+  let productDetails;
 
-    const { name, price, stock, category, description } = productDetails;
-
-    const photos = req.files as Express.Multer.File[] | undefined;
-
-    if (!photos) return next(new ErrorHandler("Please add Photo", 400));
-    if (!name || !price || !stock || !category || !description)
-      return next(new ErrorHandler("Please enter All Fields", 400));
-
-    // Check for an existing query with a status of "success"
-    const query = await ProductQuery.findOne({ userId, status: "success" });
-    if (query) {
-      // Get all public IDs of photos from the query
-      const ids = query.productDetails?.photos.map((photo) => photo.public_id);
-
-      if (ids && ids.length > 0) {
-        // Delete all photos from Cloudinary
-        await deleteFromCloudinary(ids);
-      }
-      if (query.productDetails?.name) {
-        await sendProductAcceptanceEmail(query.userId, query.productDetails.name);
-      }
-      // Remove the query after handling its photos
-      await ProductQuery.findByIdAndDelete(query._id);
-    }
-
-    // Upload new photos to Cloudinary
-    const photosURL = await uploadToCloudinary(photos);
-
-    // Create the new ReUsableProduct
-    await ReUsableProduct.create({
-      productDetails: {
-        name,
-        price,
-        description,
-        stock,
-        category: category.toLowerCase(),
-        photos: photosURL,
-      },
-      userId,
-      commission,
-    });
-
-    // Invalidate the cache for reusable products
-    await invalidateCache({ reUsableProduct: true });
-
-    return res.status(201).json({
-      success: true,
-      message: "ReUsableProduct Created Successfully",
-    });
+  // Parse product details from request body
+  try {
+    productDetails = JSON.parse(req.body.productDetails);
+  } catch (error) {
+    return next(new ErrorHandler("Invalid Product Details", 400));
   }
-);
+
+  const { name, price, stock, category, description, photos } = productDetails;
+
+  // Validate the fields
+  if (!name || !price || !stock || !category || !description)
+    return next(new ErrorHandler("Please enter all required fields", 400));
+
+  if (!photos || photos.length === 0)
+    return next(new ErrorHandler("Please add at least one photo", 400));
+
+  if (photos.length > 5)
+    return next(new ErrorHandler("Please add 5 or fewer photos", 400));
+
+  // Check for an existing query with a status of "success"
+  const query = await ProductQuery.findById(queryId);
+  if (query) {
+    if (query.productDetails?.name) {
+      const user = await User.findById(query.userId);
+      await sendProductAcceptanceEmail(user?.email!, query.productDetails.name);
+    }
+    await ProductQuery.findByIdAndDelete(queryId);
+  }
+
+  // Create the new reusable product using the photos from productDetails
+  await ReUsableProduct.create({
+    productDetails: {
+      name,
+      price,
+      description,
+      stock,
+      category: category.toLowerCase(),
+      photos, // Use photos from productDetails directly
+    },
+    userId,
+    commission,
+  });
+
+  // Invalidate cache for reusable products
+  await invalidateCache({ reUsableProduct: true });
+
+  return res.status(201).json({
+    success: true,
+    message: "ReUsableProduct Created Successfully",
+  });
+});
+
 
 
 export const updateReUsableProduct = TryCatch(async (req, res, next) => {
   const { id } = req.params;
-  const {productDetails:{
+  const{
     name,
     price,
     stock,
     category,
     description,
-  },commission } = req.body;
+    commission,
+} = req.body;
   const photos = req.files as Express.Multer.File[] | undefined;
 
   const product = await ReUsableProduct.findById(id);

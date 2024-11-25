@@ -9,6 +9,7 @@ import { ReUsableProduct } from "../models/reUsable.js";
 import { ProductQuery } from "../models/query.js";
 import { UserPayment } from "../models/userPayment.js";
 import { sendProductDeletionEmailDueToShortage } from "./emails.js";
+import { User } from "../models/user.js";
 
 
 
@@ -157,7 +158,8 @@ export const checkStockOfReUsableProductAndDelete = async (
     if (ids && ids.length > 0) {
       await deleteFromCloudinary(ids);
     }
-    sendProductDeletionEmailDueToShortage(product.userId, product.productDetails?.name!);
+    const user=await User.findById(product.userId);
+    sendProductDeletionEmailDueToShortage(user?.email!, product.productDetails?.name!);
     await product.deleteOne();
   } else {
     product.productDetails!.stock -= quantity;
@@ -290,4 +292,4 @@ export const sendProductAcceptanceEmail = async (email: string,productName:strin
     console.error(`Failed to send notification email to ${email}:`, error);
   }
     
-    }
+}
