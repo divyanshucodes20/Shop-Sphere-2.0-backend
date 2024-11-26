@@ -13,7 +13,7 @@ export const sendProductDeletionEmail = async (email: string,productName:string)
       subject: "ReusableProduct Deleted",
       html: `<p>
       we are sorry to inform you that your product <b>${productName}</b> has been deleted from our shop due to some reasons.
-      Feel free to contact us for more information.Also you can upload your query again for different product. 
+      Feel free to contact us for more information.Also you can upload your query again for different product.Your product will be revert back to you soon. 
       </p>`,});
     } catch (error) {
       console.error(`Failed to send notification email to ${email}:`, error);

@@ -17,7 +17,6 @@ import notificationRoute from "./routes/notification.js";
 import queryRoute from "./routes/query.js";
 import userPaymentRoute from "./routes/userPayment.js";
 import ReUsableProductRoute from "./routes/reUsable.js";
-import rateLimiter from "./middlewares/rateLimiter.js";
 
 config({
   path: "./.env",
@@ -59,7 +58,6 @@ app.get("/", (req, res) => {
   res.send("API Working with /api/v1");
 });
 
-app.use(rateLimiter);
 
 // Using Routes
 app.use("/api/v1/user", userRoute);

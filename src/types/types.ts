@@ -30,6 +30,13 @@ export type SearchRequestQuery = {
   sort?: string;
   page?: string;
 };
+export type ReusableSearchRequestQuery = {
+  search?: string;
+  price?: string;
+  category?: string;
+  sort?: string;
+  page?: string;
+};
 
 export interface BaseQuery {
   name?: {
@@ -38,6 +45,14 @@ export interface BaseQuery {
   };
   price?: { $lte: number };
   category?: string;
+}
+export interface ReusableBaseQueryType {
+  "productDetails.name"?: {
+    $regex: string;
+    $options: string;
+  };
+  "productDetails.category"?: string;
+  $expr?: { $lte: [string, number] }; // Using totalPrice for price filtering
 }
 
 export type InvalidateCacheProps = {

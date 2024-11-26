@@ -2,8 +2,8 @@ import { Request } from "express";
 import { redis, redisTTL } from "../app.js";
 import { TryCatch } from "../middlewares/error.js";
 import {
-  BaseQuery,
-  SearchRequestQuery,
+  ReusableBaseQueryType,
+  ReusableSearchRequestQuery,
 } from "../types/types.js";
 import {
   deleteFromCloudinary,
@@ -42,7 +42,7 @@ export const getAllReUsableCategories = TryCatch(async (req, res, next) => {
 
   if (categories) categories = JSON.parse(categories);
   else {
-    categories = await ReUsableProduct.distinct("category");
+    categories = await ReUsableProduct.distinct("productDetails.category");
     await redis.setex("reusable-categories", redisTTL, JSON.stringify(categories));
   }
 
@@ -73,7 +73,7 @@ export const getSingleReUsableProduct = TryCatch(async (req, res, next) => {
 });
 
 export const getAllReUSableProducts = TryCatch(
-  async (req: Request<{}, {}, {}, SearchRequestQuery>, res, next) => {
+  async (req: Request<{}, {}, {}, ReusableSearchRequestQuery>, res, next) => {
     const { search, sort, category, price } = req.query;
 
     const page = Number(req.query.page) || 1;
@@ -94,44 +94,56 @@ export const getAllReUSableProducts = TryCatch(
       // 17,18,19,20,21,22,23,24
       const limit = Number(process.env.PRODUCT_PER_PAGE) || 8;
       const skip = (page - 1) * limit;
+      const baseQuery: ReusableBaseQueryType = {};
 
-      const baseQuery: BaseQuery = {};
+if (search) {
+  baseQuery["productDetails.name"] = {
+    $regex: search,
+    $options: "i",
+  };
+}
 
-      if (search)
-        baseQuery.name = {
-          $regex: search,
-          $options: "i",
-        };
+if (price) {
+  baseQuery["$expr"] = {
+    $lte: ["$totalPrice", Number(price)], // Using totalPrice for price filtering
+  };
+}
 
-      if (price)
-        baseQuery.price = {
-          $lte: Number(price),
-        };
+if (category) {
+  baseQuery["productDetails.category"] = category;
+}
 
-      if (category) baseQuery.category = category;
+// Fetch products with the updated query
+const productsPromise = ReUsableProduct.find(baseQuery)
+  .sort(
+    sort === "asc"
+      ? { totalPrice: 1 } // Sort ascending by totalPrice
+      : sort === "dsc"
+      ? { totalPrice: -1 } // Sort descending by totalPrice
+      : {}
+  )
+  .limit(limit)
+  .skip(skip);
 
-      const productsPromise = ReUsableProduct.find(baseQuery)
-        .sort(sort && { price: sort === "asc" ? 1 : -1 })
-        .limit(limit)
-        .skip(skip);
+const [productsFetched, filteredOnlyProduct] = await Promise.all([
+  productsPromise,
+  ReUsableProduct.find(baseQuery),
+]);
 
-      const [productsFetched, filteredOnlyProduct] = await Promise.all([
-        productsPromise,
-        ReUsableProduct.find(baseQuery),
-      ]);
+products = productsFetched;
+totalPage = Math.ceil(filteredOnlyProduct.length / limit);
 
-      products = productsFetched;
-      totalPage = Math.ceil(filteredOnlyProduct.length / limit);
+await redis.setex(key, 30, JSON.stringify({ products, totalPage }));
 
-      await redis.setex(key, 30, JSON.stringify({ products, totalPage }));
-    }
+return res.status(200).json({
+  success: true,
+  products,
+  totalPage,
+});
 
-    return res.status(200).json({
-      success: true,
-      products,
-      totalPage,
-    });
+
   }
+}
 );
 
 export const getAdminReUsableProducts = TryCatch(async (req, res, next) => {
