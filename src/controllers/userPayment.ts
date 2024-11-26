@@ -92,7 +92,7 @@ export const getAdminAllPayments=TryCatch(
             return next(new ErrorHandler("No payments found",404));
         }
         if (payments.length === 0) {
-        return next(new ErrorHandler("No pending payments found", 404));
+        return next(new ErrorHandler("No Payments found", 404));
         }
         res.status(200).json({
             success:true,
@@ -120,8 +120,8 @@ export const getAdminCompletedPayments=TryCatch(
 
 export const getPaymentById=TryCatch(
     async(req,res,next)=>{
-        const {id}=req.params;
-        const payment=UserPayment.findById(id);
+        const {paymentid}=req.params;
+        const payment=await UserPayment.findById(paymentid);
         if(!payment){
             return next(new ErrorHandler("No payment found with this ID",404));
         }
@@ -134,8 +134,8 @@ export const getPaymentById=TryCatch(
 
 export const  processPayment=TryCatch(
     async(req,res,next)=>{
-        const {id}=req.params;
-        const payment=await UserPayment.findById(id);
+        const {paymentid}=req.params;
+        const payment=await UserPayment.findById(paymentid);
         if(!payment){
             return next(new ErrorHandler("No payment found with this ID",404));
         }
