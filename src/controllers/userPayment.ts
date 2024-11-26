@@ -84,6 +84,40 @@ export const getAllPendingPayments=TryCatch(
     }
 )
 
+export const getAdminAllPayments=TryCatch(
+
+  async(req,res,next)=>{
+        const payments=await UserPayment.find();
+        if(!payments){
+            return next(new ErrorHandler("No payments found",404));
+        }
+        if (payments.length === 0) {
+        return next(new ErrorHandler("No pending payments found", 404));
+        }
+        res.status(200).json({
+            success:true,
+            payments
+        })
+  }  
+)
+
+export const getAdminCompletedPayments=TryCatch(
+    async(req,res,next)=>{
+        const payments=await UserPayment.find({paymentStatus:"completed"});
+        if(!payments){
+            return next(new ErrorHandler("No completed payments found",404));
+        }
+        if (payments.length === 0) {
+            return next(new ErrorHandler("No pending payments found", 404));
+        }
+        res.status(200).json({
+            success:true,
+            payments
+        })
+    }
+)
+
+
 export const getPaymentById=TryCatch(
     async(req,res,next)=>{
         const {id}=req.params;
