@@ -102,7 +102,7 @@ export const newOrder = TryCatch(
 
           // Create pending payment entry for the reusable product
           await UserPayment.create({
-            userId: user,
+            userId: reusableProduct.userId,
             reusableProductId: item.productId,
             amount: totalAmount - totalCommission, // Pending payment for the user
           });
