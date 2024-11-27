@@ -52,7 +52,9 @@ export interface ReusableBaseQueryType {
     $options: string;
   };
   "productDetails.category"?: string;
-  $expr?: { $lte: [string, number] }; // Using totalPrice for price filtering
+  $expr?: {
+    $lte: [{ $add: ["$productDetails.price", "$commission"] }, number];
+  };
 }
 
 export type InvalidateCacheProps = {
