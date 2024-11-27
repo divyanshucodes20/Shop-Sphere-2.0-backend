@@ -287,7 +287,10 @@ export const sendProductAcceptanceEmail = async (email: string,productName:strin
     from: "ShopSphere <no-reply@shopsphere.com>",
     to: email,
     subject: "Product Accepted",
-    html: `<p>Your product <b>${productName}</b> has been accepted and will be forwarded to our shop</p>`,});
+    html: `<p>Congratulations! Your product <b>${productName}</b> has been accepted and will be forwarded to our shop 
+    Please send your bank details by contacting us from the contact us page to get your payment
+    when your product is sold.Please set subject as "Payment Details" and send your bank details in the message body.Thank you!
+    </p>`,});
   } catch (error) {
     console.error(`Failed to send notification email to ${email}:`, error);
   }

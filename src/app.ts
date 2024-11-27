@@ -17,6 +17,7 @@ import notificationRoute from "./routes/notification.js";
 import queryRoute from "./routes/query.js";
 import userPaymentRoute from "./routes/userPayment.js";
 import ReUsableProductRoute from "./routes/reUsable.js";
+import contactRoutes from "./routes/contact.js";
 
 config({
   path: "./.env",
@@ -69,6 +70,8 @@ app.use("/api/v1/notification",notificationRoute);
 app.use("/api/v1/query",queryRoute);
 app.use("/api/v1/userPayment", userPaymentRoute);
 app.use("/api/v1/reusable-product", ReUsableProductRoute);
+
+app.use("/api/v1/contact", contactRoutes);
 
 app.use("/uploads", express.static("uploads"));
 app.use(errorMiddleware);
