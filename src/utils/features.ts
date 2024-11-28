@@ -251,7 +251,7 @@ export const getChartData = ({
 export const sendNotificationEmail = async (email: string, productName: string) => {
   try {
     await resend.emails.send({
-      from: "ShopSphere <no-reply@shopsphere.com>",
+      from: "ShopSphere <no-reply@divyanshucodings.live>",
       to: email,
       subject: "Product Back in Stock!",
       html: `<p>The product <b>${productName}</b> is now back in stock! Order now before it runs out again.</p>`,
@@ -267,7 +267,7 @@ export const sendQueryRejectionEmail = async (email: string,productName:string) 
 try {
  
   await resend.emails.send({
-    from: "ShopSphere <no-reply@shopsphere.com>",
+    from: "ShopSphere <no-reply@divyanshucodings.live>",
     to: email,
     subject: "Query Rejected",
     html: `<p>Your query regarding the product <b>${productName}</b> has been rejected.Sorry we are not forwarding your product to our shop</p>`,
@@ -284,7 +284,7 @@ export const sendProductAcceptanceEmail = async (email: string,productName:strin
   try {
    
     await resend.emails.send({
-    from: "ShopSphere <no-reply@shopsphere.com>",
+    from: "ShopSphere <no-reply@divyanshucodings.live>",
     to: email,
     subject: "Product Accepted",
     html: `<p>Congratulations! Your product <b>${productName}</b> has been accepted and will be forwarded to our shop 
