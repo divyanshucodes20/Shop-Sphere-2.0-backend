@@ -28,7 +28,7 @@ export const getlatestProducts = TryCatch(async (req, res, next) => {
 
   if (products) products = JSON.parse(products);
   else {
-    products = await Product.find({}).sort({ createdAt: -1 }).limit(3);
+    products = await Product.find({}).sort({ createdAt: -1 }).limit(4);
     await redis.setex("latest-products", redisTTL, JSON.stringify(products));
   }
 
